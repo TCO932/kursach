@@ -6,15 +6,10 @@ class DB {
             user: "mysql",
             database: "university",
             password: "mysql"
-          });
+          }).promise();
     }
-    select(tableName) {
-        this.connection.query("SELECT * FROM " + tableName,
-            function(err, results) {
-                if (err) console.log(err);
-                console.log(tableName);
-                return results;
-        });
+    async select(tableName) {
+        return this.connection.query("SELECT * FROM " + tableName)
     }
 
     insert(tableName, data) { //data = {columns:[], values:[[]]}

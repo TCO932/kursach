@@ -1,48 +1,83 @@
 import '../css/App.css';
+import { useState } from 'react';
+import { render } from 'react-dom';
 
+function Table(props){
+  return <span>
+    {props.table}
+  </span> 
+}
 
-function Register() {
-  return <button id="register">
-    register
+async function showTable(tableName) {
+  const request = await fetch(`/api/${tableName}`);
+  console.log("only fetch", request["content"]);
+  render(
+    <Table table={request["content"]}/>,
+    document.getElementById("workSpace")
+  );
+}
+
+function ShowWorkTable(props) {
+  return <button className="TablesButton" onClick={() => showTable(props.tableName)}>
+    Work
   </button>
 }
 
-function LogOut() {
-  return <button id="logout">
-    logout
+function ShowSubjectTable(props) {
+  return <button className="TablesButton" onClick={() => showTable(props.tableName)}>
+    Subject
   </button>
 }
 
-function LogIn() {
-  return <button id="login">
-    login
+function ShowPersonTable() {
+  return <button className="TablesButton">
+    Person
   </button>
 }
 
-function Menu() {
-  return <div className="menu">
-    <div className="menu" id="rect" />
-    <div className="menu" id="bar1" />
-    <div className="menu" id="bar2" />
-    <div className="menu" id="bar3" />
-  </div>
+function ShowStudentTable() {
+  return <button className="TablesButton">
+    Student
+  </button>
 }
-function SelectAll(props){
-
+function ShowSupervisorTable() {
+  return <button className="TablesButton">
+    Supervisor
+  </button>
+}
+function ShowStudentGroupTable() {
+  return <button className="TablesButton">
+    StudentGroup
+  </button>
+}
+function ShowSpecialityTable() {
+  return <button className="TablesButton">
+    Speciality
+  </button>
+}
+function ShowPartOfTable() {
+  return <button className="TablesButton">
+    PartOfTable
+  </button>
 }
 
 function ToolBar(){
   return <div id="toolBar">
-    <Menu/>
-    <LogIn/>
-    <LogOut/>
-    <Register/>
+    <ShowWorkTable tableName="work"/>
+    <ShowSubjectTable tableName="subject"/>
+    <ShowPersonTable tableName="person"/>
+    <ShowStudentTable tableName="student"/>
+    <ShowSupervisorTable tableName="supervisor"/>
+    <ShowStudentGroupTable tableName="student_group"/>
+    <ShowSpecialityTable tableName="speciality"/>
+    <ShowPartOfTable tableName="part_of"/>
   </div>
 }
 
 function App() {
   return (
     <div className="App">
+      <div id="workSpace"/>
       <ToolBar/>
     </div>
   );

@@ -3,13 +3,23 @@ const DB = require("./db/DB.js")
 const db = new DB();
     
 const app = express();
-const jsonParser = express.json();
+//const jsonParser = express.json();
 
-app.get("/api/:tableName", function(req, res){  
-    const content = db.select(req.params["tableName"]);
+app.get("/api/:tableName", async function(req, res){  
     console.log("getting table...");
+    const result = {};
+    db.select(req.params["tableName"])
+        .then(content => {
+            result["status"] = "ok"
+            result["content"] = content[0];
+            res.send(result);
+        })
+        .catch(err =>{
+            res.send(false);
+            console.log(err);
+        });
     //const users = JSON.parse(content);
-    res.send(content?content:"undefined");
+    console.log("got table");
 });
 
 app.listen(3000, function(){
