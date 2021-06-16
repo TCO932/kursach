@@ -1,129 +1,96 @@
 const express = require("express");
 const DB = require("./db/DB.js")
 const db = new DB();
-    
 const app = express();
-//const jsonParser = express.json();
+const metaRouter = express.Router();
+
+app.use(express.urlencoded());
+app.use(express.json());
 
 app.get("/api/:tableName", async function(req, res){  
-    console.log("getting table...");
     const result = {};
     db.select(req.params["tableName"])
         .then(content => {
-            result["status"] = "ok"
+            result["ok"] = true;
             result["content"] = content[0];
             res.send(result);
         })
         .catch(err =>{
-            res.send(false);
+            result["ok"] = false;
+            res.send(result["ok"]);
             console.log(err);
         });
-    //const users = JSON.parse(content);
-    console.log("got table");
-});
+    }
+);
 
-app.listen(3000, function(){
+app.post("/api/delete", async function(req, res){  
+    if(!req.body) return res.sendStatus(400);
+    const result = {};
+    console.log(req.body);
+    db.delete(req.body.tableName, req.body.column, req.body.value)
+        .then(() => {
+            result["ok"] = true;
+            res.send(result);
+        })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+            console.log(err);
+        });
+    }
+);
+
+metaRouter.use("/getPK", async function(req, res){  
+    if(!req.body) return res.sendStatus(400);
+    const result = {};
+    db.getPrimaryKey(req.body.tableName)
+    .then((content) => {
+        result["primaryKey"] = content[0];
+        result["ok"] = true;
+        console.log(result);
+        res.send(result);
+    })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+        });
+    }
+);
+
+metaRouter.use("/getColumnNames", async function(req, res){  
+    if(!req.body) return res.sendStatus(400);
+    const result = {};
+    db.getColumnNames(req.body.tableName)
+    .then((content) => {
+        result["columnNames"] = content[0];
+        result["ok"] = true;
+        console.log(result);
+        res.send(result);
+    })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+        });
+    }
+);
+
+metaRouter.use("/getTableNames", async function(req, res){  
+    const result = {};
+    db.getTableNames()
+    .then((content) => {
+        result["tableNames"] = content[0];
+        result["ok"] = true;
+        res.send(result);
+    })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+        });
+    }
+);
+
+app.use("/api/meta", metaRouter);
+
+app.listen(3001, function(){
     console.log("Сервер ожидает подключения...");
 });
-
-/*
-// получение одного пользователя по id
-app.get("/api/users/:id", function(req, res){
-       
-    const id = req.params.id; // получаем id
-    const content = fs.readFileSync(filePath, "utf8");
-    const users = JSON.parse(content);
-    let user = null;
-    // находим в массиве пользователя по id
-    for(var i=0; i<users.length; i++){
-        if(users[i].id==id){
-            user = users[i];
-            break;
-        }
-    }
-    // отправляем пользователя
-    if(user){
-        res.send(user);
-    }
-    else{
-        res.status(404).send();
-    }
-});
-// получение отправленных данных
-app.post("/api/users", jsonParser, function (req, res) {
-      
-    if(!req.body) return res.sendStatus(400);
-      
-    const userName = req.body.name;
-    const userAge = req.body.age;
-    let user = {name: userName, age: userAge};
-      
-    let data = fs.readFileSync(filePath, "utf8");
-    let users = JSON.parse(data);
-      
-    // находим максимальный id
-    const id = Math.max.apply(Math,users.map(function(o){return o.id;}))
-    // увеличиваем его на единицу
-    user.id = id+1;
-    // добавляем пользователя в массив
-    users.push(user);
-    data = JSON.stringify(users);
-    // перезаписываем файл с новыми данными
-    fs.writeFileSync("users.json", data);
-    res.send(user);
-});
- // удаление пользователя по id
-app.delete("/api/users/:id", function(req, res){
-       
-    const id = req.params.id;
-    let data = fs.readFileSync(filePath, "utf8");
-    let users = JSON.parse(data);
-    let index = -1;
-    // находим индекс пользователя в массиве
-    for(var i=0; i < users.length; i++){
-        if(users[i].id==id){
-            index=i;
-            break;
-        }
-    }
-    if(index > -1){
-        // удаляем пользователя из массива по индексу
-        const user = users.splice(index, 1)[0];
-        data = JSON.stringify(users);
-        fs.writeFileSync("users.json", data);
-        // отправляем удаленного пользователя
-        res.send(user);
-    }
-    else{
-        res.status(404).send();
-    }
-});
-// изменение пользователя
-app.put("/api/users", jsonParser, function(req, res){
-       
-    if(!req.body) return res.sendStatus(400);
-      
-    const userId = req.body.id;
-    const userName = req.body.name;
-    const userAge = req.body.age;
-      
-    const users = JSON.parse(data);
-    let user;
-    for(var i=0; i<users.length; i++){
-        if(users[i].id==userId){
-            user = users[i];
-            break;
-        }
-    }
-    // изменяем данные у пользователя
-    if(user){
-        user.age = userAge;
-        user.name = userName;
-        data = JSON.stringify(users);
-        fs.writeFileSync("users.json", data);
-        res.send(user);
-    }
-    else{
-        res.status(404).send(user);
-    }
-});*/

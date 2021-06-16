@@ -9,32 +9,36 @@ class DB {
           }).promise();
     }
     async select(tableName) {
-        return this.connection.query("SELECT * FROM " + tableName)
+        return this.connection.query("SELECT * FROM " + tableName);
     }
 
-    insert(tableName, data) { //data = {columns:[], values:[[]]}
-        this.connection.query(`insert into ${tableName} (${data.columns}) values ?`, [data.values],
-            function(err, results, fields) {
-                console.log(err);
-                console.log(results); // собственно данные
-        });
+    async insert(tableName, data) { //data = {columns:[], values:[[]]}
+        return this.connection.query(`insert into ${tableName} (${data.columns}) values ?`, [data.values]);
     }
 
-    update(tableName, condition, data){// condition = {column, value}; data = {column, value}
-        this.connection.query(`update ${tableName} set ${data.column} = ? where ${condition.column} = ?`,
-            [data.value, condition.value],
-            function(err, results, fields) {
-                console.log(err);
-                console.log(results); // собственно данные
-        });
+    async update(tableName, condition, data){// condition = {column, value}; data = {column, value}
+        return this.connection.query(`update ${tableName} set ${data.column} = ? where ${condition.column} = ?`,
+            [data.value, condition.value]);
     }
 
-    delete(tableName, condition) {
-        this.connection.query(`delete from ${tableName} where ${condition.column} = ?`, condition.value,
-            function(err, results, fields) {
-                console.log(err);
-                console.log(results); // собственно данные
-        });
+    async delete(tableName, column, value) {
+        console.log(tableName, column, value);
+        return this.connection.query(`delete from ${tableName} where ${column} = ?`, value);
+    }
+
+    async getTableNames() {
+        return this.connection.query(`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.tables
+        where table_schema = "university" order by TABLE_NAME desc`);
+    }
+
+    async getColumnNames(tableName) {
+        return this.connection.query(`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.columns
+        where table_schema = "university" and table_name = ? order by ORDINAL_POSITION`, tableName);
+    }
+
+    async getPrimaryKey(tableName) {
+        return this.connection.query(`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.columns
+        where table_schema = "university" and COLUMN_KEY = "PRI" and table_name = ?`, tableName);
     }
     
 }
