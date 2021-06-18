@@ -13,6 +13,7 @@ app.get("/api/:tableName", async function(req, res){
         .then(content => {
             result["ok"] = true;
             result["content"] = content[0];
+            console.log(result);
             res.send(result);
         })
         .catch(err =>{
@@ -62,7 +63,7 @@ metaRouter.use("/getColumnNames", async function(req, res){
     const result = {};
     db.getColumnNames(req.body.tableName)
     .then((content) => {
-        result["columnNames"] = content[0];
+        result["columns"] = content[0];
         result["ok"] = true;
         console.log(result);
         res.send(result);
@@ -90,6 +91,58 @@ metaRouter.use("/getTableNames", async function(req, res){
 );
 
 app.use("/api/meta", metaRouter);
+
+app.post("/api/insert", async function(req, res){  
+    if(!req.body) return res.sendStatus(400);
+    const result = {};
+    console.log(req.body);
+    db.insert(req.body.tableName, req.body.data)
+        .then(() => {
+            result["ok"] = true;
+            res.send(result);
+        })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+            console.log(err);
+        });
+    }
+);
+
+app.post("/api/update", async function(req, res){  
+    if(!req.body) return res.sendStatus(400);
+    const result = {};
+    console.log(req.body);
+    db.insert(req.body.tableName, req.body.condition, req.body.data)
+        .then(() => {
+            result["ok"] = true;
+            res.send(result);
+        })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+            console.log(err);
+        });
+    }
+);
+
+app.post("/api/getColumnValue", async function(req, res){ //condition={column, value}
+    if(!req.body) return res.sendStatus(400);
+    const result = {};
+    console.log(req.body);
+    db.insert(req.body.tableName, req.body.condition)
+        .then((value) => {
+            result["ok"] = true;
+            result["value"] = value[0];
+            res.send(result);
+        })
+        .catch(err =>{
+            result["ok"] = false;
+            res.send(result);
+            console.log(err);
+        });
+    }
+);
 
 app.listen(3001, function(){
     console.log("Сервер ожидает подключения...");

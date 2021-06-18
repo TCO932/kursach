@@ -12,6 +12,10 @@ class DB {
         return this.connection.query("SELECT * FROM " + tableName);
     }
 
+    async selectColumnValue(tableName, condition) { // condition = {column, value}
+        return this.connection.query(`SELECT ${condition.column} FROM ${tableName} WHERE ${condition.column} = ?`, condition.value);
+    }
+
     async insert(tableName, data) { //data = {columns:[], values:[[]]}
         return this.connection.query(`insert into ${tableName} (${data.columns}) values ?`, [data.values]);
     }
@@ -32,8 +36,8 @@ class DB {
     }
 
     async getColumnNames(tableName) {
-        return this.connection.query(`SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.columns
-        where table_schema = "university" and table_name = ? order by ORDINAL_POSITION`, tableName);
+        return this.connection.query(`SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.columns
+        where table_schema = "university" and table_name = ? ORDER BY ORDINAL_POSITION asc`, tableName);
     }
 
     async getPrimaryKey(tableName) {
