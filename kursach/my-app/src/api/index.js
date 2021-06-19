@@ -48,7 +48,6 @@ metaRouter.use("/getPK", async function(req, res){
     .then((content) => {
         result["primaryKey"] = content[0];
         result["ok"] = true;
-        console.log(result);
         res.send(result);
     })
         .catch(err =>{
@@ -65,8 +64,8 @@ metaRouter.use("/getColumnNames", async function(req, res){
     .then((content) => {
         result["columns"] = content[0];
         result["ok"] = true;
-        console.log(result);
-        res.send(result);
+            console.log(result);
+            res.send(result);
     })
         .catch(err =>{
             result["ok"] = false;
@@ -81,7 +80,6 @@ metaRouter.use("/getTableNames", async function(req, res){
     .then((content) => {
         result["tableNames"] = content[0];
         result["ok"] = true;
-        res.send(result);
     })
         .catch(err =>{
             result["ok"] = false;
@@ -129,12 +127,12 @@ app.post("/api/update", async function(req, res){
 app.post("/api/getColumnValue", async function(req, res){ //condition={column, value}
     if(!req.body) return res.sendStatus(400);
     const result = {};
-    console.log(req.body);
+    console.log("req.body: ", req.body);
     db.insert(req.body.tableName, req.body.condition)
         .then((value) => {
             result["ok"] = true;
             result["value"] = value[0];
-            res.send(result);
+            res.send("getColumnValue result: ", result);
         })
         .catch(err =>{
             result["ok"] = false;

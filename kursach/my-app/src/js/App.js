@@ -13,22 +13,48 @@ function Modal(props) {
 }
 
 function Insert(props) { //tableName, condition, columns //column name and type, props.data, // column name and value
-  let inputs = [];
-  console.log(props.form);
-  for (let i = 0; i < props.form.columns.length; i++) {
-    const element = props.form.columns[i];
-    inputs.push(
-    <p>{props.form.columns[i].name}<br/>
-      <input type={props.form.columns[i].type} defaultValue={props.form.data[props.form.columns[i].name]} />
-    </p>);
-  }
-  //edit(props.tableName, props.condition, props.data);
+  if(props.form) {
+    let inputs = [];
+    let fields = [];
+    for (let i = 0; i < props.form.columns.length; i++) {
+      const field = {
+        "name": props.form.columns[i].name,
+        "type": props.form.columns[i].type,
+        "value": props.form.data[props.form.columns[i].name]
+      }
+      fields.push(field);
+    }
 
-  return <div>
-    {inputs}
-    <button className="insertButton" onClick={() => {props.setActive(false)}}>Отмена</button>
-    <button className="insertButton" onClick={() => {props.setActive(false)}} >Сохранить</button>
-  </div>
+    inputs = fields.map(field => 
+      <p>{field.name}<br/>
+        <input type={field.type} defaultValue={field.value} id={field.name+"form"}></input>
+      </p>
+    )
+
+    return <div className="form">
+      {inputs}
+      <button className="insertButton" onClick={() => {props.setActive(false)}}>Отмена</button>
+      <button className="insertButton" onClick={() => {  //data = {columns:[], values:[]}
+        let columns = [];
+        let values = [];
+        fields.forEach(field => {
+          columns.push(field.name);
+          values.push(document.getElementById(field.name+"form").value);
+        });
+        
+        let data = {
+          columns: columns,
+          values: values
+        };
+        edit(props.form.tableName, props.form.condition, data);
+        showTable(props.form.tableName, props.setActive, props.setModalForm);
+        props.setActive(false)
+      }} >Сохранить</button>
+    </div>
+  }
+
+  //edit(props.tableName, props.condition, props.data);
+  return <span>Ошибка!</span>
 }
 
 function Table(props) {// props. tableName = "" columns = [{"COLUMN_NAME"}, {"DATA_TYPE"}] primaryKey = "" table [{}...{}]
@@ -49,13 +75,12 @@ function Table(props) {// props. tableName = "" columns = [{"COLUMN_NAME"}, {"DA
         type = "date";
     columns.push({type: type, name: element["COLUMN_NAME"]});
   });
-  console.log(columns);
 
   if(props.table) {//Object.values
     props.table.forEach(element => {
       row = Object.values(element).map(td => <td>{td}</td>);
       row.push(<td><Change setActive={props.setActive} tableName={props.tableName} columns={columns} condition={{column: props.primaryKey, value: element[props.primaryKey]}} data={element} setModalForm={props.setModalForm}/></td>);
-      row.push(<td><Delete setActive={props.setActive} tableName={props.tableName} column={props.primaryKey} value={element[props.primaryKey]}/></td>);
+      row.push(<td><Delete setActive={props.setActive} tableName={props.tableName} column={props.primaryKey} value={element[props.primaryKey]} setModalForm={props.setModalForm}/></td>);
       table.push(<tr>{row}</tr>);
     });
   }
@@ -128,14 +153,14 @@ async function deleteRow(tableName, column, value) {
   )
 }
 
-async function edit(tableName, condition, data, callback) {
+async function edit(tableName, condition, data) {
   if (condition) {
     const req = {
       tableName: tableName,
       condition: condition,
       data: data,
     }
-    
+    console.log(req);
     const res = await fetch(`/api/getColumnValue`, {
       method: 'POST',
       headers: {
@@ -144,15 +169,16 @@ async function edit(tableName, condition, data, callback) {
       body: JSON.stringify(req)
     });
     const answer = await res.json();
+    console.log("getColumnName: ",answer);
     if (answer) {
-      update(tableName, condition, data, callback);
+      update(tableName, condition, data);
     }
   } else {
-    insert(tableName, data, callback)
+    insert(tableName, data)
   }
 }
 
-async function update(tableName, condition, data, callback) { // tableName="" condition={column, value} data=[{column, value}..]
+async function update(tableName, condition, data) { // tableName="" condition={column, value} data=[{column, value}..]
   const req = {
     tableName: tableName,
     condition: condition,
@@ -169,13 +195,12 @@ async function update(tableName, condition, data, callback) { // tableName="" co
     .then(res => {
       res.json()
       .then(data => {
-        callback();
       })
     }
   )
 }
 
-async function insert(tableName, data, callback) { // tableName="" condition={column, value} data=[{column, value}..]
+async function insert(tableName, data) { // tableName="" condition={column, value} data=[{column, value}..]
   const req = {
     tableName: tableName,
     data: data,
@@ -191,7 +216,6 @@ async function insert(tableName, data, callback) { // tableName="" condition={co
     .then(res => {
       res.json()
       .then(data => {
-        callback();
       })
     }
   )
@@ -200,7 +224,7 @@ async function insert(tableName, data, callback) { // tableName="" condition={co
 function Delete(props) {
   return <button className="utilityButton" onClick={() => {
     deleteRow(props.tableName, props.column, props.value);
-    showTable(props.tableName, props.setActive)}}>
+    showTable(props.tableName, props.setActive, props.setModalForm)}}>
     ×
   </button>
 }
@@ -235,7 +259,7 @@ class ToolBar extends React.Component{
     this.state = {tableButtons: ""};
   }
   
-  componentDidMount() {
+  async componentDidMount() {
     fetch(`/api/meta/getTableNames`)
     .then(res => {
       res.json()
@@ -257,14 +281,13 @@ class ToolBar extends React.Component{
 
 function App() {
   const [modalActive, setModalActive] = useState(false);
-  const [modalForm, setModalForm] = useState({});
+  const [modalForm, setModalForm] = useState(false);
   return (
     <div className="App">
       <div id="workSpace"/>
-        <ToolBar setActive={setModalActive} setModalForm={setModalForm}/>
-      <div/>
+      <ToolBar setActive={setModalActive} setModalForm={setModalForm}/>
       <Modal active={modalActive} setActive={setModalActive}>
-        <Insert setActive={setModalActive} form={modalForm}/>
+        <Insert setActive={setModalActive} setModalForm={setModalForm} form={modalForm}/>
       </Modal>
     </div>
   );
